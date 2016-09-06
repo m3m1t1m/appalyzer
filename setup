@@ -1,0 +1,5 @@
+#!/bin/bash
+cp ./appalyzer /bin/appalyzer
+/bin/appalyzer
+chmod 755 /bin/appalyzer
+cp ./perms.com /opt/appalyzer

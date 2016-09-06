@@ -58,7 +58,7 @@ if [ ! -d "$jd" ];then
   echo
   sleep 2
 -#################  gnome-terminal -e "appalyzer" & disown ### THIS WILL BE RELEASE
-  gnome-terminal -e "/root/appalyzer" & disown
+  gnome-terminal -e "/bin/appalyzer" & disown
   exit
 fi
 echo "Author: m3m1t1m"

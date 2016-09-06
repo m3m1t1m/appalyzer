@@ -6,6 +6,7 @@ A wrapper for various toolkits that can be found in Kali Linux for analysis of .
 Installation
 
 Download appalyzer and run setup.sh
+Appalyzer downloads and installs tools and dependancies automatically including jd-gui for java decompilation.
 
 Usage
 

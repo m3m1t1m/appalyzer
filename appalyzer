@@ -1,5 +1,4 @@
 #!/bin/bash
-ORIG=$PS1
 red () {
   echo -e '\033[1;31m'"$1"'\033[0m'
 }
@@ -86,7 +85,7 @@ while [ 1 -lt 2 ];do
       echo
       apk=`echo "$cmds" | awk '{print $2}'`
       if [ -e "$apk" ];then
-        cwd=`head -c 1 "$apk"`
+        cwd="${apk:0:1}"
         if [ "$cwd" != "/" ];then
           apk="$wd""/""$apk"
         fi
@@ -140,13 +139,15 @@ while [ 1 -lt 2 ];do
             # GET APK DETAILS
           fi
         else
-          echo "File does not appear to be an APK"
+          yellow "[!] File does not appear to be an APK\n"
+          apk=""
         fi
       else
-        echo "Cannot find APK at path specified"
+        yellow "[!] Cannot find APK at path specified\n"
+        apk=""
       fi
     else
-      echo "Unload current APK first"
+      yellow "[!] Unload current APK first\n"
     fi
   fi
   ### DISPLAY REQUESTED PERMISSIONS FOR THE APP
@@ -188,14 +189,40 @@ while [ 1 -lt 2 ];do
   fi
   ### INSTALL BACKDOOR ON DEVICE
   if [ "$cmd" == "bkdrinstall" ];then
-    : ## CHECK IF DEVICE IS CONNECTED
+    dev=`adb devices | egrep -v -m1 '(List|\*)'`
+    if [ "$dev" == "" ];then
+      yellow "\n[!] Please attach test android device\n"
+    else
+      adb install /opt/appalyzer/"$apk"/backdoors/bkdr.apk
+    fi
   fi
   ### INSTALL APK ON DEVICE
-  ### UNINSTALL APK FROM DEVICE
+  if [ "$cmd" == "push" ] || [ "$cmd" == "install" ];then
+  dev=`adb devices | egrep -v -m1 '(List|\*)'`
+    if [ "$dev" == "" ];then
+      yellow "\n[!] Please attach test android device\n"
+    else
+      adb install /opt/appalyzer/"$apk"/"$apk"
+    fi
+  fi
+
+  ####### UNINSTALL APK FROM DEVICE
+
+  ####### ATTEMPT TO BYPASS CERTIFICATE PINNING
+
+  ####### SIGN APK (LOADED / UNLOADED)
+
+  ####### OPEN WORKSPACE FOR MODIFYING SMALI
+
   ### ADB SHELL
   if [ "$cmd" == "shell" ];then
     ## CHECK IF DEVICE IS CONNECTED
-    adb shell
+    dev=`adb devices | egrep -v -m1 '(List|\*)'`
+    if [ "$dev" == "" ];then
+      yellow "\n[!] Please attach test android device\n"
+    else
+      adb shell
+    fi
   fi
   ### VIEW JAVA SOURCE CODE OF THE APP
   if [ "$cmd" == "decompile" ];then
@@ -246,7 +273,7 @@ while [ 1 -lt 2 ];do
       echo -e "\033[1;33mhelp\033[0m: displays this screen\n\033[1;33mquit\033[0m: exit appalyzer\n\033[1;33mexit\033[0m: exit appalyzer\n"
     else ### lOADED APK
       echo -e "\n\033[1;33munload\033[0m: unloads apk from analysis framework\n\033[1;33mpermissions\033[0m: display permissions for loaded APK\n\033[1;33mdecompile\033[0m: decompiles apk into java source code"
-      echo -e "\033[1;33mbackdoor\033[0m: backdoors currently loaded apk using meterpreter and starts a listener"
+      echo -e "\033[1;33mbackdoor\033[0m: backdoors currently loaded apk using meterpreter and starts a listener\n\033[1;33mpush\033[0m: installs currently loaded apk onto connected device"
       echo -e "\033[1;33minfo\033[0m: displays apk information\n\033[1;33mls\033[0m: list local files\n\033[1;33mcd\033[0m: change local directory"
       echo -e "\033[1;33mshell\033[0m: drops into adb shell (device must be connected first)"
       echo -e "\033[1;33mhelp\033[0m: displays this screen\n\033[1;33mquit\033[0m: exit appalyzer\n\033[1;33mexit\033[0m: exit appalyzer\n"

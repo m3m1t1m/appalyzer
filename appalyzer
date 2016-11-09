@@ -68,7 +68,7 @@ if [ ! -d "$jd" ];then
     echo 'alias jd-gui="java -jar /opt/jd-gui/build/libs/jd-gui-*.jar"' >> ~/.bash_aliases
     alias jd-gui="java -jar /opt/jd-gui/build/libs/jd-gui-*.jar"
     apt-get update
-    apt-get install apktool
+    apt-get install apktool adb
     cp perms.com /opt/appalyzer/
     echo "[#] Setup completed"
     sleep 3
